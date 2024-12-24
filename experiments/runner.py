@@ -37,16 +37,16 @@ class Runner:
         if is_main_process():
             if not gpu_available():
                 raise Exception("No gpu available for usage")
-            
-            # Access WORLD_SIZE safely with a default value
-            world_size = os.getenv('WORLD_SIZE', 1)  # Default to 1 if not set
-            self.logger.info("Let's use %s GPUs!" % world_size)  # Log the number of GPUs
-            torch.cuda.empty_cache()
+            if int(os.getenv('WORLD_SIZE', 1)) >= 1:
+                # self.logger.info("Let's use %s" % os.environ['WORLD_SIZE'] + "GPUs!")
+                self.logger.info("Let's use %s" % os.getenv('WORLD_SIZE', 1) + " GPUs!")
+                torch.cuda.empty_cache()
         
         # Get Dataset
         if is_main_process():
             self.logger.info("Loading Dataset ...")
-
+        
+        # Validation ground truth path
         self.val_gt_file = ops.join(args.save_path, 'test.json')
         if not args.evaluate:
             self.train_dataset, self.train_loader, self.train_sampler = self._get_train_dataset()
@@ -129,6 +129,9 @@ class Runner:
                         'scheduler': scheduler.state_dict()
                     }, to_copy, epoch+1, self.args.save_path)
 
+        # Initialize the best loss to a large value
+        best_loss = float('inf')
+        
         # Start training and validation for nepochs
         for epoch in range(args.start_epoch, args.nepochs):
             if is_main_process():
@@ -144,7 +147,8 @@ class Runner:
             epoch_time = AverageMeter()
             
             loss = 0
-
+            # Start training loop
+            cumulative_epoch_loss = 0
             # Specify operation modules
             model.train()
             # compute timing
@@ -156,25 +160,17 @@ class Runner:
             for i, extra_dict in enumerate(train_loader):
                 train_pbar.update(1)
                 data_time.update(time.time() - end)
-                
-                # Check if the image exists before processing
-                json_files = extra_dict.pop('idx_json_file')
-                for k, v in extra_dict.items():
-                    extra_dict[k] = v.cuda()
-                
-                image = extra_dict.get('image')
-                
-                # Check if image is missing
-                if image is None:
-                    print(f"Warning: Image missing in batch {i}. Skipping this batch.")
-                    continue  # Skip this batch and move to the next
-
+                if gpu_available():
+                    json_files = extra_dict.pop('idx_json_file')
+                    for k, v in extra_dict.items():
+                        extra_dict[k] = v.cuda()
+                    image = extra_dict['image']
                 image = image.contiguous().float()
-                
                 # Run model
                 optimizer.zero_grad()
-                output = model(image=image, extra_dict=extra_dict, is_training=True)
 
+                output = model(image=image, extra_dict=extra_dict, is_training=True)
+                
                 loss, loss_info = self._log_training_loss(
                     output, epoch, step=i, data_loader=train_loader)
 
@@ -182,15 +178,16 @@ class Runner:
                 
                 if is_main_process():
                     self.writer.add_scalar('lr', optimizer.param_groups[0]['lr'], epoch)
-                
+                # Accumulate the loss for the epoch
+                cumulative_epoch_loss += loss.item()
                 # Setup backward pass
                 loss.backward()
 
-                # Clip gradients (useful for instabilities or mistakes in ground truth)
+                # Clip gradients (usefull for instabilities or mistakes in ground truth)
                 if args.clip_grad_norm != 0:
                     nn.utils.clip_grad_norm_(model.parameters(), args.clip_grad_norm)
 
-                # Update params
+                # update params
                 optimizer.step()
 
                 if args.lr_policy == 'cosine_warmup':
@@ -198,7 +195,7 @@ class Runner:
                 elif args.lr_policy == 'PolyLR':
                     scheduler.step()
 
-                # Time training iteration
+                # Time trainig iteration
                 batch_time.update(time.time() - end)
                 end = time.time()
 
@@ -211,7 +208,13 @@ class Runner:
                             batch_time=batch_time, data_time=data_time,
                             loss=loss.item(), loss_info=loss_info))
             train_pbar.close()
-
+            # Calculate the average epoch loss
+            average_epoch_loss = cumulative_epoch_loss / len(train_loader)
+            # Save the model if the average epoch loss is better than the best so far
+            if average_epoch_loss < best_loss:
+                best_loss = average_epoch_loss
+            self.logger.info('Saving model at epoch {} with loss {}'.format(epoch + 1, best_loss))
+            save_cur_ckpt(average_epoch_loss, with_eval=False, eval_stats=None)
             epoch_time.update(time.time() - epoch_time.start)
 
             if is_main_process():
@@ -243,7 +246,6 @@ class Runner:
         # at the end of training
         if not args.no_tb and is_main_process():
             self.writer.close()
-
 
     def _log_model_info(self, model):
         args = self.args
@@ -721,11 +723,11 @@ class Runner:
                                                             eval_stats[4], eval_stats[5],
                                                             eval_stats[6]))
 
+
 def set_work_dir(cfg):
     # =========output path========== #
     save_prefix = osp.join(os.getcwd(), 'work_dirs')
     save_root = osp.join(save_prefix, cfg.output_dir)
-
     # cur work dirname
     cfg_path = Path(cfg.config)
 
