@@ -1,0 +1,43 @@
+Tue, 24-Dec-2024 05:25:08 runner.py[line:43] INFO Let's use 2024-12-2Tue, 24-Dec-2024 05:25:08 runner.py[line:48] INFO Loa2024-12-24 05:25:08,118 - mmdet - INFO - Init Done!
+2024-12-24 05:25:08,118 - mmdet - INFO - >>>>>  start eval <<<<< 
+
+2024-12-24 05:25:08,355 - mmdet - INFO - initialize ResNet with init_cfg {'type': 'Pretrained', 'checkpoint': 'torchvision://resnet50'}
+2024-12-24 05:25:08,921 - mmdet - INFO - Convert model with Sync BatchNorm
+2024-12-24 05:41:02,994 - mmdet - INFO - => loading checkpoint 'pretrained_models/openlane_lite.pth'
+2024-12-24 05:41:07,429 - mmdet - INFO - match num:0.0
+2024-12-24 05:41:07,429 - mmdet - INFO - cnt_gt_all:0
+2024-12-24 05:41:07,430 - mmdet - INFO - cnt_pred_all:0
+2024-12-24 05:41:07,430 - mmdet - INFO - cnt_gt_matched:0.0
+2024-12-24 05:41:07,430 - mmdet - INFO - cnt_pred_matched:0.0
+2024-12-24 05:41:07,435 - mmdet - INFO - ===> Evaluation laneline F-measure: 0.00000000
+2024-12-24 05:41:07,435 - mmdet - INFO - ===> Evaluation laneline Recall: 0.00000000
+2024-12-24 05:41:07,436 - mmdet - INFO - ===> Evaluation laneline Precision: 0.00000000
+2024-12-24 05:41:07,436 - mmdet - INFO - ===> Evaluation laneline Category Accuracy: 0.00000000
+2024-12-24 05:41:07,436 - mmdet - INFO - ===> Evaluation laneline x error (close): -1.00000000 m
+2024-12-24 05:41:07,437 - mmdet - INFO - ===> Evaluation laneline x error (far): -1.00000000 m
+2024-12-24 05:41:07,437 - mmdet - INFO - ===> Evaluation laneline z error (close): -1.00000000 m
+2024-12-24 05:41:07,437 - mmdet - INFO - ===> Evaluation laneline z error (far): -1.00000000 m
+5:08 runner.py[line:489] INFO Convert model with Sync BatchNorm
+Tue, 24-Dec-2024 05:41:02 runner.py[line:511] INFO => loading checkpoint 'pretrained_models/openlane_lite.pth'
+Tue, 24-Dec-2024 05:41:03 logging.py[line:107] INFO ModulatedDeformConvPack encoder.layer3.0.conv2 is upgraded to version 2.
+Tue, 24-Dec-2024 05:41:03 logging.py[line:107] INFO ModulatedDeformConvPack encoder.layer3.1.conv2 is upgraded to version 2.
+Tue, 24-Dec-2024 05:41:03 logging.py[line:107] INFO ModulatedDeformConvPack encoder.layer3.2.conv2 is upgraded to version 2.
+Tue, 24-Dec-2024 05:41:03 logging.py[line:107] INFO ModulatedDeformConvPack encoder.layer3.3.conv2 is upgraded to version 2.
+Tue, 24-Dec-2024 05:41:03 logging.py[line:107] INFO ModulatedDeformConvPack encoder.layer3.4.conv2 is upgraded to version 2.
+Tue, 24-Dec-2024 05:41:03 logging.py[line:107] INFO ModulatedDeformConvPack encoder.layer3.5.conv2 is upgraded to version 2.
+Tue, 24-Dec-2024 05:41:03 logging.py[line:107] INFO ModulatedDeformConvPack encoder.layer4.0.conv2 is upgraded to version 2.
+Tue, 24-Dec-2024 05:41:03 logging.py[line:107] INFO ModulatedDeformConvPack encoder.layer4.1.conv2 is upgraded to version 2.
+Tue, 24-Dec-2024 05:41:03 logging.py[line:107] INFO ModulatedDeformConvPack encoder.layer4.2.conv2 is upgraded to version 2.
+Tue, 24-Dec-2024 05:41:07 eval_3D_lane.py[line:566] INFO match num:0.0
+Tue, 24-Dec-2024 05:41:07 eval_3D_lane.py[line:567] INFO cnt_gt_all:0
+Tue, 24-Dec-2024 05:41:07 eval_3D_lane.py[line:568] INFO cnt_pred_all:0
+Tue, 24-Dec-2024 05:41:07 eval_3D_lane.py[line:569] INFO cnt_gt_matched:0.0
+Tue, 24-Dec-2024 05:41:07 eval_3D_lane.py[line:570] INFO cnt_pred_matched:0.0
+Tue, 24-Dec-2024 05:41:07 runner.py[line:692] INFO ===> Evaluation laneline F-measure: 0.00000000
+Tue, 24-Dec-2024 05:41:07 runner.py[line:693] INFO ===> Evaluation laneline Recall: 0.00000000
+Tue, 24-Dec-2024 05:41:07 runner.py[line:694] INFO ===> Evaluation laneline Precision: 0.00000000
+Tue, 24-Dec-2024 05:41:07 runner.py[line:695] INFO ===> Evaluation laneline Category Accuracy: 0.00000000
+Tue, 24-Dec-2024 05:41:07 runner.py[line:696] INFO ===> Evaluation laneline x error (close): -1.00000000 m
+Tue, 24-Dec-2024 05:41:07 runner.py[line:697] INFO ===> Evaluation laneline x error (far): -1.00000000 m
+Tue, 24-Dec-2024 05:41:07 runner.py[line:698] INFO ===> Evaluation laneline z error (close): -1.00000000 m
+Tue, 24-Dec-2024 05:41:07 runner.py[line:699] INFO ===> Evaluation laneline z error (far): -1.00000000 m
