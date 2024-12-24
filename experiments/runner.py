@@ -156,17 +156,25 @@ class Runner:
             for i, extra_dict in enumerate(train_loader):
                 train_pbar.update(1)
                 data_time.update(time.time() - end)
-                if gpu_available():
-                    json_files = extra_dict.pop('idx_json_file')
-                    for k, v in extra_dict.items():
-                        extra_dict[k] = v.cuda()
-                    image = extra_dict['image']
+                
+                # Check if the image exists before processing
+                json_files = extra_dict.pop('idx_json_file')
+                for k, v in extra_dict.items():
+                    extra_dict[k] = v.cuda()
+                
+                image = extra_dict.get('image')
+                
+                # Check if image is missing
+                if image is None:
+                    print(f"Warning: Image missing in batch {i}. Skipping this batch.")
+                    continue  # Skip this batch and move to the next
+
                 image = image.contiguous().float()
+                
                 # Run model
                 optimizer.zero_grad()
-
                 output = model(image=image, extra_dict=extra_dict, is_training=True)
-                
+
                 loss, loss_info = self._log_training_loss(
                     output, epoch, step=i, data_loader=train_loader)
 
@@ -178,11 +186,11 @@ class Runner:
                 # Setup backward pass
                 loss.backward()
 
-                # Clip gradients (usefull for instabilities or mistakes in ground truth)
+                # Clip gradients (useful for instabilities or mistakes in ground truth)
                 if args.clip_grad_norm != 0:
                     nn.utils.clip_grad_norm_(model.parameters(), args.clip_grad_norm)
 
-                # update params
+                # Update params
                 optimizer.step()
 
                 if args.lr_policy == 'cosine_warmup':
@@ -190,7 +198,7 @@ class Runner:
                 elif args.lr_policy == 'PolyLR':
                     scheduler.step()
 
-                # Time trainig iteration
+                # Time training iteration
                 batch_time.update(time.time() - end)
                 end = time.time()
 
@@ -235,6 +243,7 @@ class Runner:
         # at the end of training
         if not args.no_tb and is_main_process():
             self.writer.close()
+
 
     def _log_model_info(self, model):
         args = self.args
@@ -711,7 +720,6 @@ class Runner:
                                                             eval_stats[2], eval_stats[3],
                                                             eval_stats[4], eval_stats[5],
                                                             eval_stats[6]))
-
 
 def set_work_dir(cfg):
     # =========output path========== #
