@@ -41,7 +41,6 @@ class LaneDataset(Dataset):
     # dataset_base_dir is image path, json_file_path is json file path,
     def __init__(self, dataset_base_dir, json_file_path, args, data_aug=False):
         """
-
         :param dataset_info_file: json file list
         """
         self.totensor = transforms.ToTensor()
@@ -102,6 +101,15 @@ class LaneDataset(Dataset):
         self.num_y_steps_dense = len(self.anchor_y_steps_dense)
         self.anchor_dim = 3 * self.num_y_steps + args.num_category
         self.save_json_path = args.save_json_path
+
+        # Initialize logger
+        self.logger = logging.getLogger(__name__)  # Create logger for the class
+        self.logger.setLevel(logging.WARNING)  # Set the level to WARNING
+        console_handler = logging.StreamHandler()  # Create handler to print logs to console
+        console_handler.setLevel(logging.WARNING)
+        formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')  # Log format
+        console_handler.setFormatter(formatter)
+        self.logger.addHandler(console_handler)
 
         # parse ground-truth file
         if 'openlane' in self.dataset_name:
