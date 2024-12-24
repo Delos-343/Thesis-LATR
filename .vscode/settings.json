@@ -1,0 +1,6 @@
+{
+    "python.analysis.extraPaths": [
+        "./mmdet_src/tools/model_converters/detectron2py"
+    ],
+    "git.ignoreLimitWarning": true
+}
