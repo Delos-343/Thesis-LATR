@@ -134,10 +134,18 @@ class LaneDataset(Dataset):
         _label_laneline_org = None
         _gt_laneline_category_org = None
 
-        image_path = map_once_json2img(idx_json_file)
+        with open(idx_json_file, 'r') as file:
+            file_lines = [line for line in file]
+            info_dict = json.loads(file_lines[0])
 
-        assert ops.exists(image_path), '{:s} not exist'.format(image_path)
-        _label_image_path = image_path
+            image_path = ops.join(self.dataset_base_dir, info_dict['file_path'])
+            
+            if not ops.exists(image_path):
+                # Use print for the warning instead of logger
+                print(f"Warning: Image {image_path} not found. Skipping this entry.")
+                return None, None, None, None, None, None, None, None  # Return None to skip
+
+            _label_image_path = image_path
 
         with open(idx_json_file, 'r') as file:
             file_lines = [line for line in file]
@@ -232,36 +240,37 @@ class LaneDataset(Dataset):
         _label_cam_pitch = None
         cam_extrinsics = None
         cam_intrinsics = None
-        # _label_laneline = None
         _label_laneline_org = None
-        # _gt_laneline_visibility = None
-        # _gt_laneline_category = None
         _gt_laneline_category_org = None
-        # _laneline_ass_id = None
 
         with open(idx_json_file, 'r') as file:
             file_lines = [line for line in file]
             info_dict = json.loads(file_lines[0])
 
             image_path = ops.join(self.dataset_base_dir, info_dict['file_path'])
-            assert ops.exists(image_path), '{:s} not exist'.format(image_path)
+            
+            # Check if the image file exists
+            if not ops.exists(image_path):
+                # Log a warning and return None for missing images
+                self.logger.warning(f"Image {image_path} not found. Skipping this entry.")
+                return None, None, None, None, None, None, None, None  # Return None to indicate missing data
+            
             _label_image_path = image_path
 
             if not self.fix_cam:
                 cam_extrinsics = np.array(info_dict['extrinsic'])
                 # Re-calculate extrinsic matrix based on ground coordinate
                 R_vg = np.array([[0, 1, 0],
-                                    [-1, 0, 0],
-                                    [0, 0, 1]], dtype=float)
+                                [-1, 0, 0],
+                                [0, 0, 1]], dtype=float)
                 R_gc = np.array([[1, 0, 0],
-                                    [0, 0, 1],
-                                    [0, -1, 0]], dtype=float)
+                                [0, 0, 1],
+                                [0, -1, 0]], dtype=float)
                 cam_extrinsics[:3, :3] = np.matmul(np.matmul(
-                                            np.matmul(np.linalg.inv(R_vg), cam_extrinsics[:3, :3]),
-                                                R_vg), R_gc)
+                                                    np.matmul(np.linalg.inv(R_vg), cam_extrinsics[:3, :3]),
+                                                        R_vg), R_gc)
                 cam_extrinsics[0:2, 3] = 0.0
-                
-                # gt_cam_height = info_dict['cam_height']
+
                 gt_cam_height = cam_extrinsics[2, 3]
                 if 'cam_pitch' in info_dict:
                     gt_cam_pitch = info_dict['cam_pitch']
@@ -269,10 +278,9 @@ class LaneDataset(Dataset):
                     gt_cam_pitch = 0
 
                 if 'intrinsic' in info_dict:
-                    cam_intrinsics = info_dict['intrinsic']
-                    cam_intrinsics = np.array(cam_intrinsics)
+                    cam_intrinsics = np.array(info_dict['intrinsic'])
                 else:
-                    cam_intrinsics = self.K  
+                    cam_intrinsics = self.K
 
             _label_cam_height = gt_cam_height
             _label_cam_pitch = gt_cam_pitch
@@ -280,21 +288,17 @@ class LaneDataset(Dataset):
             gt_lanes_packed = info_dict['lane_lines']
             gt_lane_pts, gt_lane_visibility, gt_laneline_category = [], [], []
             for i, gt_lane_packed in enumerate(gt_lanes_packed):
-                # A GT lane can be either 2D or 3D
-                # if a GT lane is 3D, the height is intact from 3D GT, so keep it intact here too
                 lane = np.array(gt_lane_packed['xyz'])
                 lane_visibility = np.array(gt_lane_packed['visibility'])
 
-                # Coordinate convertion for openlane_300 data
                 lane = np.vstack((lane, np.ones((1, lane.shape[1]))))
-                cam_representation = np.linalg.inv(
-                                        np.array([[0, 0, 1, 0],
-                                                    [-1, 0, 0, 0],
-                                                    [0, -1, 0, 0],
-                                                    [0, 0, 0, 1]], dtype=float))  # transformation from apollo camera to openlane camera
+                cam_representation = np.linalg.inv(np.array([[0, 0, 1, 0],
+                                                            [-1, 0, 0, 0],
+                                                            [0, -1, 0, 0],
+                                                            [0, 0, 0, 1]], dtype=float)) 
                 lane = np.matmul(cam_extrinsics, np.matmul(cam_representation, lane))
-
                 lane = lane[0:3, :].T
+
                 gt_lane_pts.append(lane)
                 gt_lane_visibility.append(lane_visibility)
 
@@ -305,22 +309,19 @@ class LaneDataset(Dataset):
                     gt_laneline_category.append(lane_cate)
                 else:
                     gt_laneline_category.append(1)
-        
-        # _label_laneline_org = copy.deepcopy(gt_lane_pts)
-        _gt_laneline_category_org = copy.deepcopy(np.array(gt_laneline_category))
 
+        _gt_laneline_category_org = np.array(gt_laneline_category)
         gt_lanes = gt_lane_pts
         gt_visibility = gt_lane_visibility
         gt_category = gt_laneline_category
 
         # prune gt lanes by visibility labels
         gt_lanes = [prune_3d_lane_by_visibility(gt_lane, gt_visibility[k]) for k, gt_lane in enumerate(gt_lanes)]
-        _label_laneline_org = copy.deepcopy(gt_lanes)
+        _label_laneline_org = gt_lanes
 
         return _label_image_path, _label_cam_height, _label_cam_pitch, \
-               cam_extrinsics, cam_intrinsics, \
-               _label_laneline_org, \
-               _gt_laneline_category_org, info_dict
+            cam_extrinsics, cam_intrinsics, \
+            _label_laneline_org, _gt_laneline_category_org, info_dict
 
     def __len__(self):
         """
@@ -526,9 +527,13 @@ def seed_worker(worker_id):
     np.random.seed(worker_seed)
     random.seed(worker_seed)
 
-
 def init_distributed_mode(args):
     if args.dist:
+        # Check if the process group is already initialized
+        if dist.is_initialized():
+            print("Distributed process group is already initialized.")
+            return
+        
         # Set environment variables for distributed training
         os.environ['MASTER_ADDR'] = 'localhost'
         os.environ['MASTER_PORT'] = '29500'
@@ -547,7 +552,6 @@ def init_distributed_mode(args):
         args.world_size = world_size
         args.local_rank = local_rank
         print(f"Distributed mode initialized: Rank {rank}/{world_size}, Local rank {local_rank}")
-
 
 def get_loader(transformed_dataset, args):
     """
