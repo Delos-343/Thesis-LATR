@@ -40,14 +40,22 @@ class LaneDataset(Dataset):
     """
     # dataset_base_dir is image path, json_file_path is json file path,
     def __init__(self, dataset_base_dir, json_file_path, args, data_aug=False):
+
         """
-        :param dataset_info_file: json file list
+        :param dataset_base_dir: Base directory for images
+        :param json_file_path: Path to JSON files
+        :param args: Additional arguments containing dataset parameters
+        :param data_aug: Boolean indicating whether to apply data augmentation
         """
+
         self.totensor = transforms.ToTensor()
+
         mean = [0.485, 0.456, 0.406] if args.mean is None else args.mean
         std = [0.229, 0.224, 0.225] if args.std is None else args.std
+
         self.normalize = transforms.Normalize(mean, std)
         self.data_aug = data_aug
+
         if data_aug:
             if hasattr(args, 'photo_aug'):
                 self.photo_aug = PhotoMetricDistortionMultiViewImage(**args.photo_aug)
@@ -57,81 +65,74 @@ class LaneDataset(Dataset):
         self.dataset_base_dir = dataset_base_dir
         self.json_file_path = json_file_path
 
-        # dataset parameters
+        # Dataset parameters
         self.dataset_name = args.dataset_name
         self.num_category = args.num_category
-
         self.h_org = args.org_h
         self.w_org = args.org_w
         self.h_crop = args.crop_y
 
-        # parameters related to service network
+        # Parameters related to service network
         self.h_net = args.resize_h
         self.w_net = args.resize_w
         self.u_ratio = float(self.w_net) / float(self.w_org)
         self.v_ratio = float(self.h_net) / float(self.h_org - self.h_crop)
         self.top_view_region = args.top_view_region
         self.max_lanes = args.max_lanes
-
         self.K = args.K
         self.H_crop = homography_crop_resize([args.org_h, args.org_w], args.crop_y, [args.resize_h, args.resize_w])
 
         if args.fix_cam:
             self.fix_cam = True
-            # compute the homography between image and IPM, and crop transformation
             self.cam_height = args.cam_height
             self.cam_pitch = np.pi / 180 * args.pitch
             self.P_g2im = projection_g2im(self.cam_pitch, self.cam_height, args.K)
         else:
             self.fix_cam = False
 
-        # compute anchor steps
+        # Compute anchor steps
         self.use_default_anchor = args.use_default_anchor
-        
+
         self.x_min, self.x_max = self.top_view_region[0, 0], self.top_view_region[1, 0]
         self.y_min, self.y_max = self.top_view_region[2, 1], self.top_view_region[0, 1]
-        
+
         self.anchor_y_steps = args.anchor_y_steps
         self.num_y_steps = len(self.anchor_y_steps)
 
         self.anchor_y_steps_dense = args.get(
             'anchor_y_steps_dense',
             np.linspace(3, 103, 200))
+
         args.anchor_y_steps_dense = self.anchor_y_steps_dense
         self.num_y_steps_dense = len(self.anchor_y_steps_dense)
         self.anchor_dim = 3 * self.num_y_steps + args.num_category
         self.save_json_path = args.save_json_path
 
         # Initialize logger
-        self.logger = logging.getLogger(__name__)  # Create logger for the class
-        self.logger.setLevel(logging.WARNING)  # Set the level to WARNING
-        console_handler = logging.StreamHandler()  # Create handler to print logs to console
+        self.logger = logging.getLogger(__name__)
+        self.logger.setLevel(logging.WARNING)
+
+        console_handler = logging.StreamHandler()
         console_handler.setLevel(logging.WARNING)
-        formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')  # Log format
+        formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
         console_handler.setFormatter(formatter)
+
         self.logger.addHandler(console_handler)
 
-        # parse ground-truth file
+        # Parse ground-truth file for OpenLane dataset
         if 'openlane' in self.dataset_name:
             label_list = glob.glob(json_file_path + '**/*.json', recursive=True)
             self._label_list = label_list
-        elif 'once' in self.dataset_name:
-            label_list = glob.glob(json_file_path + '*/*/*.json', recursive=True)
-            self._label_list = []
-            for js_label_file in label_list:
-                if not os.path.getsize(js_label_file):
-                    continue
-                image_path = map_once_json2img(js_label_file)
-                if not os.path.exists(image_path):
-                    continue
-                self._label_list.append(js_label_file)
-        else: 
-            raise ValueError("to use ApolloDataset for apollo")
-        
-        if hasattr(self, '_label_list'):
-            self.n_samples = len(self._label_list)
+            self.logger.info(f"Found {len(self._label_list)} JSON files in {json_file_path}.")
         else:
-            self.n_samples = self._label_image_path.shape[0]
+            self.logger.error("Invalid dataset name provided. Expected 'openlane'.")
+            raise ValueError("Only the OpenLane dataset is supported.")
+
+        # Check if any valid JSON files were found
+        self.n_samples = len(self._label_list)
+
+        if self.n_samples == 0:
+            self.logger.warning("No valid JSON files found. Please check your dataset.")
 
     def preprocess_data_from_json_once(self, idx_json_file):
         _label_image_path = None
@@ -367,25 +368,32 @@ class LaneDataset(Dataset):
             else:
                 # should not be used
                 intrinsics = self.K
-                extrinsics = np.zeros((3,4))
-                extrinsics[2,3] = gt_cam_height
+                extrinsics = np.zeros((3, 4))
+                extrinsics[2, 3] = gt_cam_height
         else:
             gt_cam_height = self.cam_height
             gt_cam_pitch = self.cam_pitch
             # should not be used
             intrinsics = self.K
-            extrinsics = np.zeros((3,4))
-            extrinsics[2,3] = gt_cam_height
+            extrinsics = np.zeros((3, 4))
+            extrinsics[2, 3] = gt_cam_height
 
         img_name = _label_image_path
+
+        # Check if the image file exists
+        if not os.path.exists(img_name):
+            print(f"Image {img_name} not found. Skipping this entry.")
+            return None  # or return an empty dictionary or a default value
+
         with open(img_name, 'rb') as f:
             image = (Image.open(f).convert('RGB'))
 
         # image preprocess with crop and resize
-        image = F.crop(image, self.h_crop, 0, self.h_org-self.h_crop, self.w_org)
+        image = F.crop(image, self.h_crop, 0, self.h_org - self.h_crop, self.w_org)
         image = F.resize(image, size=(self.h_net, self.w_net), interpolation=InterpolationMode.BILINEAR)
 
         gt_category_2d = _gt_laneline_category_org
+        
         if self.data_aug:
             img_rot, aug_mat = data_aug_rotate(image)
             if self.photo_aug:
@@ -394,8 +402,10 @@ class LaneDataset(Dataset):
                 )['img']
             image = Image.fromarray(
                 np.clip(img_rot, 0, 255).astype(np.uint8))
+
         image = self.totensor(image).float()
         image = self.normalize(image)
+
         intrinsics = torch.from_numpy(intrinsics)
         extrinsics = torch.from_numpy(extrinsics)
 
@@ -406,11 +416,11 @@ class LaneDataset(Dataset):
         ground_lanes = np.zeros((self.max_lanes, self.anchor_dim), dtype=np.float32)
         ground_lanes_dense = np.zeros(
             (self.max_lanes, self.num_y_steps_dense * 3), dtype=np.float32)
-        gt_lanes = _label_laneline_org # ground
+        gt_lanes = _label_laneline_org  # ground
         gt_laneline_img = [[0]] * len(gt_lanes)
 
-        H_g2im, P_g2im, H_crop = self.transform_mats_impl(cam_extrinsics, \
-                                            cam_intrinsics, _label_cam_pitch, _label_cam_height)
+        H_g2im, P_g2im, H_crop = self.transform_mats_impl(cam_extrinsics,
+                                                        cam_intrinsics, _label_cam_pitch, _label_cam_height)
         M = np.matmul(H_crop, P_g2im)
         # update transformation with image augmentation
         if self.data_aug:
@@ -453,13 +463,13 @@ class LaneDataset(Dataset):
             ground_lanes_dense[i][2*self.num_y_steps_dense: 3*self.num_y_steps_dense] = vis_dense * 1.0
 
             x_2d, y_2d = projective_transformation(M, lane[:, 0],
-                                                   lane[:, 1], lane[:, 2])
+                                                lane[:, 1], lane[:, 2])
             gt_laneline_img[i] = np.array([x_2d, y_2d]).T.tolist()
             for j in range(len(x_2d) - 1):
                 seg_label = cv2.line(seg_label,
-                                     (int(x_2d[j]), int(y_2d[j])), (int(x_2d[j+1]), int(y_2d[j+1])),
-                                     color=np.asscalar(np.array([1])),
-                                     thickness=thickness)
+                                    (int(x_2d[j]), int(y_2d[j])), (int(x_2d[j+1]), int(y_2d[j+1])),
+                                    color=np.ndarray.item(np.array([1])),
+                                    thickness=thickness)
                 seg_idx_label[i] = cv2.line(
                     seg_idx_label[i],
                     (int(x_2d[j]), int(y_2d[j])), (int(x_2d[j+1]), int(y_2d[j+1])),
@@ -468,6 +478,7 @@ class LaneDataset(Dataset):
 
         seg_label = torch.from_numpy(seg_label.astype(np.float32))
         seg_label.unsqueeze_(0)
+
         extra_dict['seg_label'] = seg_label
         extra_dict['seg_idx_label'] = seg_idx_label
         extra_dict['ground_lanes'] = ground_lanes
@@ -476,9 +487,11 @@ class LaneDataset(Dataset):
         extra_dict['pad_shape'] = torch.Tensor(seg_idx_label.shape[-2:]).float()
         extra_dict['idx_json_file'] = idx_json_file
         extra_dict['image'] = image
+
         if self.data_aug:
             aug_mat = torch.from_numpy(aug_mat.astype(np.float32))
             extra_dict['aug_mat'] = aug_mat
+
         return extra_dict
 
     # old getitem, workable
@@ -631,4 +644,5 @@ def map_once_json2img(json_label_file):
     else:
         raise ValueError("train/val/test not in the json path")
     image_path = json_label_file.replace(split_name, 'data').replace('.json', '.jpg')
+    print(f"Constructed image path: {image_path}")
     return image_path
