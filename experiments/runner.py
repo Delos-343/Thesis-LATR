@@ -745,4 +745,3 @@ def set_work_dir(cfg):
 
     # cp config into cur_work_dir
     shutil.copy(cfg_path.as_posix(), cfg.save_path)
-    
