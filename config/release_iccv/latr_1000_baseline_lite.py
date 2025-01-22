@@ -14,6 +14,7 @@ dataset = '1000'
 dataset_dir = './data/openlane/images/'
 data_dir = './data/openlane/lane3d_1000/'
 
+# batch_size = 8
 batch_size = 4
 nworkers = 4
 num_category = 21
@@ -49,6 +50,7 @@ latr_cfg = dict(
     num_query = num_query,
     num_group = 1,
     sparse_num_group = 4,
+    # Backbone
     encoder = dict(
         type='ResNet',
         depth=50,
@@ -62,6 +64,7 @@ latr_cfg = dict(
         stage_with_dcn=(False, False, True, True),
         init_cfg=dict(type='Pretrained', checkpoint='torchvision://resnet50')
     ),
+    # Connect backbone to head
     neck = dict(
         type='FPN',
         in_channels=[512, 1024, 2048],
@@ -158,13 +161,21 @@ sparse_ins_decoder=Config(
 resize_h = 720
 resize_w = 960
 
-nepochs = 24
-eval_freq = 8
+nepochs = 50
+
+# nepochs = 2
+
+eval_freq = 1
+# optimizer_cfg = dict(
+#     type='AdamW',
+#     lr=2e-4,
+#     paramwise_cfg=dict(
+#         custom_keys={
+#             'sampling_offsets': dict(lr_mult=0.1),
+#         }),
+#     weight_decay=0.01)
+
 optimizer_cfg = dict(
     type='AdamW',
     lr=2e-4,
-    paramwise_cfg=dict(
-        custom_keys={
-            'sampling_offsets': dict(lr_mult=0.1),
-        }),
     weight_decay=0.01)
