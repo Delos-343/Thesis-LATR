@@ -314,8 +314,8 @@ def projective_transformation(Matrix, x, y, z):
     coordinates = np.vstack((x, y, z, ones))
     trans = np.matmul(Matrix, coordinates)
 
-    x_vals = trans[0, :]/trans[4, :]
-    y_vals = trans[1, :]/trans[4, :]
+    x_vals = trans[0, :]/trans[2, :]
+    y_vals = trans[1, :]/trans[2, :]
     return x_vals, y_vals
 
 
