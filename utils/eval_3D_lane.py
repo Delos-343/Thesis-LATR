@@ -419,7 +419,7 @@ class LaneEval(object):
 
     
     # compare predicted set and ground-truth set using a fixed lane probability threshold
-    def bench_one_submit_ddp(self, pred_lines_sub, gt_lines_sub, model_name, prob_th=0.5, vis=False):
+    def bench_one_submit_dp(self, pred_lines_sub, gt_lines_sub, model_name, prob_th=0.5, vis=False):
         json_gt = gt_lines_sub
         json_pred = pred_lines_sub
 
@@ -441,9 +441,8 @@ class LaneEval(object):
             pred_lanes_prob = pred['pred_laneLines_prob']
             if model_name == "GenLaneNet":
                 pred_lanes = [pred_lanes[ii] for ii in range(len(pred_lanes_prob)) if
-                              pred_lanes_prob[ii] > prob_th]
+                            pred_lanes_prob[ii] > prob_th]
                 pred_category = np.zeros(len(pred_lanes_prob))
-            # Note: non-lane class is already filtered out in compute_3d_lanes_all_category()
             else:
                 pred_lanes = [pred_lanes[ii] for ii in range(len(pred_lanes_prob)) if max(pred_lanes_prob[ii]) > prob_th]
                 pred_lanes_prob = [prob for k, prob in enumerate(pred_lanes_prob) if max(prob) > prob_th]
@@ -455,7 +454,7 @@ class LaneEval(object):
 
             if raw_file not in gts:
                 raise Exception('Some raw_file from your predictions do not exist in the test tasks.')
-            
+
             gt = gts[raw_file]
 
             # evaluate lanelines
@@ -463,11 +462,7 @@ class LaneEval(object):
             cam_extrinsics = np.array(gt['extrinsic'])
             cam_intrinsics = gt['intrinsic']
             cam_intrinsics = np.array(cam_intrinsics)
-            # else:
-            #     assert all(cam_param in gt for cam_param in ['cam_pitch', 'cam_height']), "without 'extrinsic' in gt json_file dict, AND not 'cam_height' & 'cam_pitch' as well."
-            #     cam_extrinsics = 
-            #     cam_intrinsics = np.array(self.args.K)
-            
+
             if self.is_apollo:
                 gt_cam_height = gt['cam_height']
                 gt_cam_pitch = gt['cam_pitch']
@@ -475,7 +470,7 @@ class LaneEval(object):
                 gt_lane_visibility = gt['laneLines_visibility']
 
                 gt_lanes, gt_visibility, gt_category = [], [], []
-                
+
                 for j, gt_lane_packed in enumerate(gt_lanes_packed):
                     lane = np.array(gt_lane_packed)
                     lane_visibility = np.array(gt_lane_visibility[j])
@@ -483,22 +478,19 @@ class LaneEval(object):
                     gt_visibility.append(lane_visibility)
                     gt_category.append(1)
             else:
-                # Re-calculate extrinsic matrix based on ground coordinate
                 R_vg = np.array([[0, 1, 0],
-                                    [-1, 0, 0],
-                                    [0, 0, 1]], dtype=float)
+                                [-1, 0, 0],
+                                [0, 0, 1]], dtype=float)
                 R_gc = np.array([[1, 0, 0],
-                                    [0, 0, 1],
-                                    [0, -1, 0]], dtype=float)
+                                [0, 0, 1],
+                                [0, -1, 0]], dtype=float)
                 cam_extrinsics[:3, :3] = np.matmul(np.matmul(
-                                            np.matmul(np.linalg.inv(R_vg), cam_extrinsics[:3, :3]),
-                                                R_vg), R_gc)
+                                                    np.matmul(np.linalg.inv(R_vg), cam_extrinsics[:3, :3]),
+                                                        R_vg), R_gc)
                 gt_cam_height = cam_extrinsics[2, 3]
                 gt_cam_pitch = 0
 
                 cam_extrinsics[0:2, 3] = 0.0
-                # cam_extrinsics[2, 3] = gt_cam_height
-
                 cam_intrinsics = gt['intrinsic']
                 cam_intrinsics = np.array(cam_intrinsics)
                 try:
@@ -509,8 +501,6 @@ class LaneEval(object):
 
                 gt_lanes, gt_visibility, gt_category = [], [], []
                 for j, gt_lane_packed in enumerate(gt_lanes_packed):
-                    # A GT lane can be either 2D or 3D
-                    # if a GT lane is 3D, the height is intact from 3D GT, so keep it intact here too
                     lane = np.array(gt_lane_packed['xyz'])
                     lane_visibility = np.array(gt_lane_packed['visibility'])
 
@@ -526,7 +516,7 @@ class LaneEval(object):
                     gt_lanes.append(lane)
                     gt_visibility.append(lane_visibility)
                     gt_category.append(gt_lane_packed['category'])
-            
+
             if self.is_apollo:
                 P_g2im = projection_g2im(gt_cam_pitch, gt_cam_height, cam_intrinsics)
             else:
@@ -548,8 +538,6 @@ class LaneEval(object):
                                                     vis,
                                                     P_g2im)
             laneline_stats.append(np.array([r_lane, p_lane, c_lane, cnt_gt, cnt_pred, match_num]))
-            # consider x_error z_error only for the matched lanes
-            # if r_lane > 0 and p_lane > 0:
             laneline_x_error_close.extend(x_error_close)
             laneline_x_error_far.extend(x_error_far)
             laneline_z_error_close.extend(z_error_close)
@@ -563,29 +551,32 @@ class LaneEval(object):
         laneline_z_error_close = np.array(laneline_z_error_close)
         laneline_z_error_far = np.array(laneline_z_error_far)
 
-        self.logger.info("match num:"+(str(np.sum(laneline_stats[:5]))))
-        self.logger.info("cnt_gt_all:"+str(gt_num_all))
-        self.logger.info("cnt_pred_all:"+str(pred_num_all))
-        self.logger.info("cnt_gt_matched:"+str(np.sum(laneline_stats[:3])))
-        self.logger.info("cnt_pred_matched:"+str(np.sum(laneline_stats[:4])))
-        
-        if np.sum(laneline_stats[:3])!= 0:
+        self.logger.info("match num:" + str(np.sum(laneline_stats[:5])))
+        self.logger.info("cnt_gt_all:" + str(gt_num_all))
+        self.logger.info("cnt_pred_all:" + str(pred_num_all))
+        self.logger.info("cnt_gt_matched:" + str(np.sum(laneline_stats[:3])))
+        self.logger.info("cnt_pred_matched:" + str(np.sum(laneline_stats[:4])))
+
+        if np.sum(laneline_stats[:3]) != 0:
             R_lane = np.sum(laneline_stats[:0]) / (np.sum(laneline_stats[:3]))
         else:
-            R_lane = np.sum(laneline_stats[:0]) / (np.sum(laneline_stats[:3]) + 1e-6)   # recall = TP / (TP+FN)
+            R_lane = np.sum(laneline_stats[:0]) / (np.sum(laneline_stats[:3]) + 1e-6)  # recall = TP / (TP + FN)
+
         if np.sum(laneline_stats[:4]) != 0:
             P_lane = np.sum(laneline_stats[:1]) / (np.sum(laneline_stats[:4]))
         else:
-            P_lane = np.sum(laneline_stats[:1]) / (np.sum(laneline_stats[:4]) + 1e-6)   # precision = TP / (TP+FP)
+            P_lane = np.sum(laneline_stats[:1]) / (np.sum(laneline_stats[:4]) + 1e-6)  # precision = TP / (TP + FP)
+
         if np.sum(laneline_stats[:5]) != 0:
             C_lane = np.sum(laneline_stats[:2]) / (np.sum(laneline_stats[:5]))
         else:
-            C_lane = np.sum(laneline_stats[:2]) / (np.sum(laneline_stats[:5]) + 1e-6)   # category_accuracy
+            C_lane = np.sum(laneline_stats[:2]) / (np.sum(laneline_stats[:5]) + 1e-6)  # category_accuracy
+
         if (R_lane + P_lane) != 0:
             F_lane = 2 * R_lane * P_lane / (R_lane + P_lane)
         else:
             F_lane = 2 * R_lane * P_lane / (R_lane + P_lane + 1e-6)
-        
+
         if laneline_x_error_close.shape[0] > 0:
             x_error_close_avg = np.average(laneline_x_error_close[laneline_x_error_close > -1 + 1e-6])
         else:
@@ -602,7 +593,7 @@ class LaneEval(object):
             z_error_far_avg = np.average(laneline_z_error_far[laneline_z_error_far > -1 + 1e-6])
         else:
             z_error_far_avg = -1
-        
+
         output_stats.append(F_lane)
         output_stats.append(R_lane)
         output_stats.append(P_lane)
@@ -611,11 +602,11 @@ class LaneEval(object):
         output_stats.append(x_error_far_avg)
         output_stats.append(z_error_close_avg)
         output_stats.append(z_error_far_avg)
-        output_stats.append(np.sum(laneline_stats[:0]))   # 8
-        output_stats.append(np.sum(laneline_stats[:1]))   # 9
-        output_stats.append(np.sum(laneline_stats[:2]))   # 10
-        output_stats.append(np.sum(laneline_stats[:3]))   # 11
-        output_stats.append(np.sum(laneline_stats[:4]))   # 12
-        output_stats.append(np.sum(laneline_stats[:5]))   # 13
+        output_stats.append(np.sum(laneline_stats[:0]))  # 8
+        output_stats.append(np.sum(laneline_stats[:1]))  # 9
+        output_stats.append(np.sum(laneline_stats[:2]))  # 10
+        output_stats.append(np.sum(laneline_stats[:3]))  # 11
+        output_stats.append(np.sum(laneline_stats[:4]))  # 12
+        output_stats.append(np.sum(laneline_stats[:5]))  # 13
 
         return output_stats
