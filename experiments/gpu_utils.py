@@ -1,17 +1,13 @@
 import torch
-import torch.distributed as dist
 
 def get_rank() -> int:
-    if not dist.is_available():
-        return 0
-    if not dist.is_initialized():
-        return 0
-    return dist.get_rank()
-
+    # Always return 0 since there is no distributed setup.
+    return 0
 
 def is_main_process() -> bool:
-    return get_rank() == 0
-
+    # Since we have only one GPU, it will always be the main process.
+    return True
 
 def gpu_available() -> bool:
+    # Check if a GPU is available for use.
     return torch.cuda.is_available()
