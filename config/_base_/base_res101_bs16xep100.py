@@ -73,12 +73,12 @@ no_tb = False
 print_freq = 50
 save_freq = 50
 
-# ddp setting
-dist = True
-sync_bn = True
-cudnn = True
+# DP (Data Parallel) setting
+dp = True  # DP mode instead of DDP
+sync_bn = True  # BatchNorm synchronization can still be used in DP mode
+cudnn = True  # Enable cuDNN optimizations
 
-distributed = True
+distributed = False
 local_rank = None #TODO
 gpu = 0
 world_size = 1
