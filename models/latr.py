@@ -3,13 +3,13 @@ import torch.nn as nn
 import torch.nn.functional as F
 from utils.utils import *
 from mmdet3d.models import build_backbone, build_neck
+# from mmdet3d.models import backbones, necks
 from .latr_head import LATRHead
 from mmcv.utils import Config
 from .ms2one import build_ms2one
 from .utils import deepFeatureExtractor_EfficientNet
 
 from mmdet.models.builder import BACKBONES
-
 
 # overall network
 class LATR(nn.Module):
@@ -26,9 +26,12 @@ class LATR(nn.Module):
         num_group = args.latr_cfg.num_group
         sparse_num_group = args.latr_cfg.sparse_num_group
 
+        # resnet 50 backbone
         self.encoder = build_backbone(args.latr_cfg.encoder)
+        # self.encoder = backbone(args.latr_cfg.encoder)
         if getattr(args.latr_cfg, 'neck', None):
             self.neck = build_neck(args.latr_cfg.neck)
+            # self.neck = necks(args.latr_cfg.neck)
         else:
             self.neck = None
         self.encoder.init_weights()
