@@ -1,4 +1,5 @@
 import torch
+import torch.distributed as dist
 import torch.optim
 import torch.nn as nn
 import numpy as np
@@ -18,10 +19,10 @@ from utils import eval_3D_lane, eval_3D_once
 from utils import eval_3D_lane_apollo
 from utils.utils import *
 
-# ddp related
+# dp related
 import torch.distributed as dist
-from torch.nn.parallel import DistributedDataParallel as DDP
-from .ddp import *
+from torch.nn.parallel import DataParallel as DP
+from .dp import *
 import os.path as osp
 from .gpu_utils import gpu_available
 from mmcv.runner.optimizer import build_optimizer
@@ -36,17 +37,19 @@ class Runner:
         # Check GPU availability
         if is_main_process():
             if not gpu_available():
-                raise Exception("No gpu available for usage")
-            if int(os.getenv('WORLD_SIZE', 1)) >= 1:
-                # self.logger.info("Let's use %s" % os.environ['WORLD_SIZE'] + "GPUs!")
-                self.logger.info("Let's use %s" % os.getenv('WORLD_SIZE', 1) + " GPUs!")
+                raise Exception("No GPU available for usage")
+            
+            # Get WORLD_SIZE with a default value of 1 if not set
+            world_size = int(os.getenv('WORLD_SIZE', 1))
+            
+            if world_size >= 1:
+                self.logger.info(f"Let's use {world_size} GPUs!")
                 torch.cuda.empty_cache()
         
         # Get Dataset
         if is_main_process():
             self.logger.info("Loading Dataset ...")
-        
-        # Validation ground truth path
+
         self.val_gt_file = ops.join(args.save_path, 'test.json')
         if not args.evaluate:
             self.train_dataset, self.train_loader, self.train_sampler = self._get_train_dataset()
@@ -83,10 +86,12 @@ class Runner:
         train_sampler = self.train_sampler
 
         global lowest_loss, best_f1_epoch, best_val_f1, best_epoch
+
+        print(model)
+
         # Define model or resume
-        
         model, optimizer, scheduler, best_epoch, \
-            lowest_loss, best_f1_epoch, best_val_f1 = self._get_model_ddp()
+            lowest_loss, best_f1_epoch, best_val_f1 = self._get_model_dp()
         
         self._log_model_info(model)
         
@@ -129,9 +134,6 @@ class Runner:
                         'scheduler': scheduler.state_dict()
                     }, to_copy, epoch+1, self.args.save_path)
 
-        # Initialize the best loss to a large value
-        best_loss = float('inf')
-        
         # Start training and validation for nepochs
         for epoch in range(args.start_epoch, args.nepochs):
             if is_main_process():
@@ -147,8 +149,7 @@ class Runner:
             epoch_time = AverageMeter()
             
             loss = 0
-            # Start training loop
-            cumulative_epoch_loss = 0
+
             # Specify operation modules
             model.train()
             # compute timing
@@ -178,8 +179,7 @@ class Runner:
                 
                 if is_main_process():
                     self.writer.add_scalar('lr', optimizer.param_groups[0]['lr'], epoch)
-                # Accumulate the loss for the epoch
-                cumulative_epoch_loss += loss.item()
+                
                 # Setup backward pass
                 loss.backward()
 
@@ -208,13 +208,7 @@ class Runner:
                             batch_time=batch_time, data_time=data_time,
                             loss=loss.item(), loss_info=loss_info))
             train_pbar.close()
-            # Calculate the average epoch loss
-            average_epoch_loss = cumulative_epoch_loss / len(train_loader)
-            # Save the model if the average epoch loss is better than the best so far
-            if average_epoch_loss < best_loss:
-                best_loss = average_epoch_loss
-            self.logger.info('Saving model at epoch {} with loss {}'.format(epoch + 1, best_loss))
-            save_cur_ckpt(average_epoch_loss, with_eval=False, eval_stats=None)
+
             epoch_time.update(time.time() - epoch_time.start)
 
             if is_main_process():
@@ -401,7 +395,7 @@ class Runner:
             val_pbar.close()
 
             if 'openlane' in args.dataset_name:
-                eval_stats = self.evaluator.bench_one_submit_ddp(
+                eval_stats = self.evaluator.bench_one_submit_dp(
                     pred_lines_sub, gt_lines_sub, args.model_name,
                     args.pos_threshold, vis=False)
             elif 'once' in args.dataset_name:
@@ -410,7 +404,7 @@ class Runner:
                     args.eval_config_dir, args)
             elif 'apollo' in args.dataset_name:
                 self.logger.info(' >>> eval mAP | [0.05, 0.95]')
-                eval_stats = self.evaluator.bench_one_submit_ddp(
+                eval_stats = self.evaluator.bench_one_submit_dp(
                     pred_lines_sub, gt_lines_sub,
                     args.model_name, args.pos_threshold, vis=False)
             else:
@@ -531,10 +525,12 @@ class Runner:
         model = self._get_model_from_cfg()
         self._load_ckpt_from_workdir(model)
 
-        dist.barrier()
-        # DDP setting
-        if args.distributed:
-            model = DDP(model, device_ids=[args.local_rank], output_device=args.local_rank, find_unused_parameters=True)
+        # Remove distributed setup
+        # No need for dist initialization for single GPU
+        # Simply set the model to GPU (assuming your GPU is CUDA-enabled)
+
+        model = model.cuda()  # Use the GPU for inference
+
         _, eval_stats = self.validate(model)
 
         if is_main_process() and (eval_stats is not None):
@@ -555,45 +551,45 @@ class Runner:
 
         return train_dataset, train_loader, train_sampler
 
-    def _get_model_ddp(self):
+    def _get_model_dp(self):
         args = self.args
         # define network
         model = LATR(args)
-        
-        # if args.sync_bn:
+
+        # Check if SyncBatchNorm should be used (for distributed setups)
         if is_main_process():
             self.logger.info("Convert model with Sync BatchNorm")
         model = nn.SyncBatchNorm.convert_sync_batchnorm(model)
-        
+
+        # Load the model onto the GPU
         if gpu_available():
-            # Load model on gpu before passing params to optimizer
             device = torch.device("cuda", args.local_rank)
             model = model.to(device)
+        else:
+            device = torch.device("cpu")
+            model = model.to(device)
 
-        """
-            first load param to model, then model = DDP(model)
-        """
-
-        # resume model
+        # Resume model if needed
         args.resume = first_run(args.save_path)
 
         model, best_epoch, lowest_loss, best_f1_epoch, best_val_f1, \
             optim_saved_state, schedule_saved_state = self.resume_model(model)
         dist.barrier()
-        # DDP setting
+
+        # If using distributed training (DataParallel for single GPU or DistributedDataParallel for multiple GPUs)
         if args.distributed:
-            model = DDP(
-                model, device_ids=[args.local_rank],
-                output_device=args.local_rank,
-                find_unused_parameters=True
-            )
+            if args.local_rank > 0:
+                model = nn.DataParallel(model, device_ids=[args.local_rank])
+            else:
+                model = DP(
+                    model, device_ids=[args.local_rank],
+                    output_device=args.local_rank,
+                    find_unused_parameters=True
+                )
 
         # Define optimizer and scheduler
-        optimizer = build_optimizer(
-            model,
-            args.optimizer_cfg)
-        scheduler = define_scheduler(
-            optimizer, args, dataset_size=len(self.train_loader))
+        optimizer = build_optimizer(model, args.optimizer_cfg)
+        scheduler = define_scheduler(optimizer, args, dataset_size=len(self.train_loader))
 
         return model, optimizer, scheduler, best_epoch, lowest_loss, best_f1_epoch, best_val_f1
 
@@ -641,11 +637,13 @@ class Runner:
                 valid_dataset = LaneDataset(args.dataset_dir, args.data_dir + 'test/up_down_case/', args)
 
         elif 'once' in args.dataset_name:
-            valid_dataset = LaneDataset(args.dataset_dir, ops.join(args.data_dir, 'val/'), args)
+            valid_dataset = LaneDataset(args.dataset_dir, os.path.join(args.data_dir, 'val/'), args)
         else:
             valid_dataset = ApolloLaneDataset(args.dataset_dir, os.path.join(args.data_dir, 'test.json'), args)
 
+        # Update this line to handle two returned values from get_loader
         valid_loader, valid_sampler = get_loader(valid_dataset, args)
+
         return valid_dataset, valid_loader, valid_sampler
 
     def save_eval_result_once(self, args, img_path, lanelines_pred, lanelines_prob):
@@ -728,6 +726,7 @@ def set_work_dir(cfg):
     # =========output path========== #
     save_prefix = osp.join(os.getcwd(), 'work_dirs')
     save_root = osp.join(save_prefix, cfg.output_dir)
+
     # cur work dirname
     cfg_path = Path(cfg.config)
 
