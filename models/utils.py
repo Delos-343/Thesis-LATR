@@ -7,18 +7,19 @@ def inverse_sigmoid(x, eps=1e-5):
     """Inverse function of sigmoid.
 
     Args:
-        x (Tensor): The tensor to do the
-            inverse.
-        eps (float): EPS avoid numerical
-            overflow. Defaults 1e-5.
+        x (Tensor) : The tensor to do the inverse.
+        eps (float): EPS avoid numerical overflow.
+                     Defaults 1e-5.
     Returns:
         Tensor: The x has passed the inverse
             function of sigmoid, has same
             shape with input.
     """
     x = x.clamp(min=0, max=1)
+    
     x1 = x.clamp(min=eps)
     x2 = (1 - x).clamp(min=eps)
+    
     return torch.log(x1 / x2)
 
 
@@ -26,7 +27,7 @@ class deepFeatureExtractor_EfficientNet(nn.Module):
     def __init__(self, architecture="EfficientNet-B5", lv6=False, lv5=False, lv4=False, lv3=False):
         super(deepFeatureExtractor_EfficientNet, self).__init__()
         assert architecture in ["EfficientNet-B0", "EfficientNet-B1", "EfficientNet-B2", "EfficientNet-B3", 
-                                    "EfficientNet-B4", "EfficientNet-B5", "EfficientNet-B6", "EfficientNet-B7"]
+                                "EfficientNet-B4", "EfficientNet-B5", "EfficientNet-B6", "EfficientNet-B7"]
         
         if architecture == "EfficientNet-B0":
             self.encoder = geffnet.tf_efficientnet_b0_ns(pretrained=True)
@@ -60,11 +61,14 @@ class deepFeatureExtractor_EfficientNet(nn.Module):
             self.encoder = geffnet.tf_efficientnet_b7_ns(pretrained=True)
             self.dimList = [32, 48, 80, 224, 2560] #5th feature is extracted after conv_head or bn2
             #self.dimList = [32, 48, 80, 224, 640] #5th feature is extracted after blocks[6]
+        
         del self.encoder.global_pool
         del self.encoder.classifier
+        
         #self.block_idx = [3, 4, 5, 7, 9] #5th feature is extracted after blocks[6]
         #self.block_idx = [3, 4, 5, 7, 10] #5th feature is extracted after conv_head
         self.block_idx = [3, 4, 5, 7, 11] #5th feature is extracted after bn2
+        
         if lv6 is False:
             del self.encoder.blocks[6]
             del self.encoder.conv_head
@@ -84,11 +88,13 @@ class deepFeatureExtractor_EfficientNet(nn.Module):
             del self.encoder.blocks[3]
             self.block_idx = self.block_idx[:1]
             self.dimList = self.dimList[:1]
+            
         # after passing blocks[3]    : H/2  x W/2
         # after passing blocks[4]    : H/4  x W/4
         # after passing blocks[5]    : H/8  x W/8
         # after passing blocks[7]    : H/16 x W/16
         # after passing conv_stem    : H/32 x W/32
+        
         self.fixList = ['blocks.0.0','bn']
 
         for name, parameters in self.encoder.named_parameters():
