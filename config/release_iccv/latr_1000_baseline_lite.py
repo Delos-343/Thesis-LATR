@@ -14,8 +14,8 @@ dataset = '1000'
 dataset_dir = './data/openlane/images/'
 data_dir = './data/openlane/lane3d_1000/'
 
-batch_size = 8
-nworkers = 10
+batch_size = 4
+nworkers = 4
 num_category = 21
 pos_threshold = 0.3
 
