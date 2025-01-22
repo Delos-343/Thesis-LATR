@@ -89,7 +89,7 @@ class InstanceBranch(nn.Module):
     def forward(self, seg_features, is_training=True):
         out = {}
         # SparseInst part
-        seg_features = self.inst_convs(seg_features) # F function in A=σ(F([X,S])).
+        seg_features = self.inst_convs(seg_features)
         # predict instance activation maps
         iam = self.iam_conv(seg_features.tile(
             (1, self.num_group, 1, 1)))
@@ -269,4 +269,4 @@ class SparseInsDecoder(nn.Module):
             target["masks"] = targets_per_image[pos_mask] > 0
             new_targets.append(target)
         return new_targets
-        # return output
+        return output
