@@ -40,7 +40,8 @@ from experiments.gpu_utils import is_main_process
 from mmdet.utils import get_root_logger as get_mmdet_root_logger
 # from mmdet.utils import logger as get_mmdet_root_logger
 
-
+# Check if CUDA is available, otherwise use CPU
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 def create_logger(args):
     
@@ -89,6 +90,7 @@ def create_logger(args):
     logger = get_mmdet_root_logger(log_file=filename, log_level=logging.INFO)
     return logger
 
+
 def define_args():
     parser = argparse.ArgumentParser(description='PersFormer_3DLane_Detection')
 
@@ -96,12 +98,15 @@ def define_args():
     parser.add_argument("--cudnn", type=str2bool, nargs='?',
                         const=True, default=True, help="cudnn optimization active")
 
-    # DDP setting
-    parser.add_argument('--distributed', action='store_true')
-    parser.add_argument("--local_rank", type=int)
-    parser.add_argument('--gpu', type=int, default=0)
-    parser.add_argument('--world_size', type=int, default=1)
-    parser.add_argument('--nodes', type=int, default=1)
+    # Remove DDP (Distributed Data Parallel) settings
+    # parser.add_argument('--distributed', action='store_true')
+    # parser.add_argument("--local_rank", type=int)
+    # parser.add_argument('--world_size', type=int, default=1)
+    # parser.add_argument('--nodes', type=int, default=1)
+
+    # Use single GPU (since only one GPU is available on your laptop)
+    parser.add_argument('--gpu', type=int, default=0, help='GPU id to use')
+    
     parser.add_argument('--eval_ckpt', type=str, default='')
     parser.add_argument('--resume_from', type=str, default='')
     parser.add_argument('--no_eval', action='store_true')
@@ -121,18 +126,19 @@ def define_args():
     parser.add_argument('--output_dir', default='openlane', type=str,
                         help='output_dir name under `work_dirs`')
     parser.add_argument('--evaluate_case', default='', type=str,
-                        help='scene name, some are in shor.')
+                        help='scene name, some are in short.')
     parser.add_argument('--eval_freq', type=int, default=2,
-                        help='evaluation frequency during training, 0 means no eval', )
+                        help='evaluation frequency during training, 0 means no eval')
 
     # eval using gen-laneNet
     parser.add_argument('--rewrite_pred', default=False, action='store_true',
-                        help='whether rewrite existing pred .json file.')
+                        help='whether to rewrite existing pred .json file.')
     parser.add_argument('--save_best', default=False,
                         action='store_true', help='only save best ckpt.')
 
     # workdir
     parser.add_argument('--save_root', default='work_dirs', type=str)
+    
     # dataset
     parser.add_argument('--dataset', default='300', type=str,
                         help='1000 | 300 openlane dataset')
@@ -308,8 +314,8 @@ def projective_transformation(Matrix, x, y, z):
     coordinates = np.vstack((x, y, z, ones))
     trans = np.matmul(Matrix, coordinates)
 
-    x_vals = trans[0, :]/trans[2, :]
-    y_vals = trans[1, :]/trans[2, :]
+    x_vals = trans[0, :]/trans[4, :]
+    y_vals = trans[1, :]/trans[4, :]
     return x_vals, y_vals
 
 
