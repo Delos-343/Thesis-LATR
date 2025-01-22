@@ -1,7 +1,7 @@
 from mmcv.utils import Config
 # from mmengine.config import Config
 from utils.utils import *
-from experiments.ddp import *
+# from experiments.dp import *
 from experiments.runner import *
 from argparse import Namespace
 
@@ -21,6 +21,7 @@ def test_openlane_lite():
     args.config = "config/release_iccv/latr_1000_baseline_lite.py"
     # cfg_options_list = ['evaluate=true', 'eval_ckpt=pretrained_models/openlane_lite.pth']
     cfg_options_list = ['evaluate=true', 'eval_ckpt=pretrained_models/openlane_lite.pth']
+    
     # Convert the list of options to a dictionary
     cfg_options_dict = {}
     for option in cfg_options_list:
@@ -28,15 +29,23 @@ def test_openlane_lite():
         cfg_options_dict[key] = value
     
     args.cfg_options = cfg_options_dict
+    
     # Load configuration from the specified file
     cfg = Config.fromfile(args.config)
     
     # Merge any additional configuration options provided through --cfg-options
     if args.cfg_options is not None:
         cfg.merge_from_dict(args.cfg_options)
-
-    ddp_init(args)
+    
+    # Set 'dist' to False directly in the config to avoid any distributed setup
+    cfg['dist'] = False
+    
+    # No need for dp_init in single-GPU setup
+    # dp_init(args)  # Commented out, no need for this in single GPU training
+    
+    # Merge args into config to reflect any changes
     cfg.merge_from_dict(vars(args))
+    
     # Create a runner and set the configuration
     runner = Runner(cfg)
     
@@ -73,7 +82,7 @@ def train_openlane_lite():
     if args.cfg_options is not None:
         cfg.merge_from_dict(args.cfg_options)
        
-    ddp_init(args)
+    dp_init(args)
     cfg.merge_from_dict(vars(args))
     # Create a runner and set the configuration
     runner = Runner(cfg)
@@ -111,7 +120,7 @@ def train_openlane_base():
     if args.cfg_options is not None:
         cfg.merge_from_dict(args.cfg_options)
        
-    ddp_init(args)
+    dp_init(args)
     cfg.merge_from_dict(vars(args))
     # Create a runner and set the configuration
     runner = Runner(cfg)
@@ -121,5 +130,5 @@ def train_openlane_base():
     
 if __name__ == '__main__':
     # train_openlane_base()
-    train_openlane_lite()
-    # test_openlane_lite()
+    # train_openlane_lite()
+    test_openlane_lite()
