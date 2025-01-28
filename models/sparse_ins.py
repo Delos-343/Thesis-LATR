@@ -145,10 +145,19 @@ class InstanceBranch(nn.Module):
             pred_logits = self.cls_score(inst_features)
             pred_kernel = self.mask_kernel(inst_features)
             pred_scores = self.objectness(inst_features)
+
+            # ---  Split x and z predictions ---
+            pred_xs = self.reg_x(inst_features)  # Separate convolution for x
+            pred_zs = self.reg_z(inst_features)  # Separate convolution for z
+            # ---------------------------------
+
             out.update(dict(
                 pred_logits=pred_logits,
                 pred_kernel=pred_kernel,
-                pred_scores=pred_scores))
+                pred_scores=pred_scores,
+                pred_xs=pred_xs,  # Add x prediction to output
+                pred_zs=pred_zs   # Add z prediction to output
+            ))
         return out
 
 class SparseInsDecoder(nn.Module):
