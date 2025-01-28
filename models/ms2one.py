@@ -8,22 +8,6 @@ from mmseg.ops import resize
 
 def build_ms2one(config):
 
-    """
-
-        # Implementation of a neural network module using dilated convolutions to capture spatial features at different scales.
-        # The model consists of multiple scales, each containing dilated convolution layers with varying dilation rates.
-        # The `num_scales` parameter determines the number of scales.
-        # Each scale may have multiple dilated convolution layers (`j` iterations), and the dilation rates decrease with depth.
-        # The chosen dilation values (1, 2, 5, 9) increase gradually, enhancing the model's ability to recognize features at different spatial scales.
-        # If `one_layer_before` is True, an additional convolution layer with batch normalization and ReLU activation is applied before dilated convolutions to reduce input size.
-        # The model can merge outputs from different scales (`merge=True`).
-        # If `fpn` is also True, feature pyramid network-like merging is employed.
-        # The `target_shape` parameter can be used to specify the desired output shape.
-        # The final layer, if merging is enabled, combines the scaled outputs.
-        # Overall, this architecture enables the network to efficiently capture spatial information across multiple scales without downsampling the input.
-
-    """
-
     """Builds the ms2one module based on the provided configuration."""
     config = copy.deepcopy(config)
     module_type = config.pop('type')
@@ -37,7 +21,6 @@ def build_ms2one(config):
 
 
 class Naive(nn.Module):
-
     """
     _summary_
 
@@ -70,11 +53,11 @@ class Naive(nn.Module):
             for feat in ms_feats
         ]
         concatenated_feats = torch.cat(interpolated_feats, dim=1)
+        
         return self.conv(concatenated_feats)
 
 
 class DilateNaive(nn.Module):
-
     """
     _summary_
 
@@ -97,87 +80,97 @@ class DilateNaive(nn.Module):
 
     """
 
-    """Multi-scale feature processing with dilated convolutions."""
-    def __init__(self, inc, outc, num_scales=4, dilations=(1, 2, 5, 9),
-                 merge=True, fpn=False, target_shape=None, one_layer_before=False):
-        super().__init__()
+    def __init__(self, inc, outc, num_scales=4,
+                 dilations=(1, 2, 5, 9),
+                 merge=True, fpn=False,
+                 target_shape=None,
+                 one_layer_before=False):
         
+        super().__init__()
+
+        # [1, 2, 5 , 9]
         self.dilations = dilations
         self.num_scales = num_scales
+
+        if not isinstance(inc, (tuple, list)):
+            inc = [inc for _ in range(num_scales)]
+
+        self.inc = inc
+        self.outc = outc
         self.merge = merge
         self.fpn = fpn
         self.target_shape = target_shape
+        self.layers = nn.ModuleList()
 
-        # Ensure `inc` is a list of correct length
-        if not isinstance(inc, (tuple, list)):
-            inc = [inc] * num_scales
-        self.inc = inc
-        self.outc = outc
+        """
 
-        # Build convolutional layers for each scale
-        self.layers = nn.ModuleList([
-            self._build_dilated_layers(inc[i], outc, dilations, one_layer_before)
-            for i in range(num_scales)
-        ])
+            # Implementation of a neural network module using dilated convolutions to capture spatial features at different scales.
+            # The model consists of multiple scales, each containing dilated convolution layers with varying dilation rates.
+            # The `num_scales` parameter determines the number of scales.
+            # Each scale may have multiple dilated convolution layers (`j` iterations), and the dilation rates decrease with depth.
+            # The chosen dilation values (1, 2, 5, 9) increase gradually, enhancing the model's ability to recognize features at different spatial scales.
+            # If `one_layer_before` is True, an additional convolution layer with batch normalization and ReLU activation is applied before dilated convolutions to reduce input size.
+            # The model can merge outputs from different scales (`merge=True`).
+            # If `fpn` is also True, feature pyramid network-like merging is employed.
+            # The `target_shape` parameter can be used to specify the desired output shape.
+            # The final layer, if merging is enabled, combines the scaled outputs.
+            # Overall, this architecture enables the network to efficiently capture spatial information across multiple scales without downsampling the input.
 
-        # Final merging layer
+        """
+
+        for i in range(num_scales):
+            layers = []
+            if one_layer_before:
+                layers.extend([
+                    nn.Conv2d(inc[i], outc, kernel_size=1, bias=False),
+                    nn.BatchNorm2d(outc),
+                    nn.ReLU(True)
+                ])
+
+            for j in range(len(dilations[:-i])):
+                d = dilations[j]
+                layers.append(nn.Sequential(
+                    nn.Conv2d(inc[i] if j == 0 and not one_layer_before else outc, outc,
+                              kernel_size=1 if d == 1 else 3,
+                              stride=1,
+                              padding=0 if d == 1 else d,
+                              dilation=d,
+                              bias=False),
+                    nn.BatchNorm2d(outc),
+                    nn.ReLU(True)))
+                
+            self.layers.append(nn.Sequential(*layers))
+
         if self.merge:
             self.final_layer = nn.Sequential(
-                nn.Conv2d(outc, outc, kernel_size=3, padding=1, bias=False),
+                nn.Conv2d(outc, outc, 3, 1, padding=1, bias=False),
                 nn.BatchNorm2d(outc),
-                nn.ReLU(inplace=True),
-                nn.Conv2d(outc, outc, kernel_size=1)
-            )
-
-    def _build_dilated_layers(self, inc, outc, dilations, one_layer_before):
-        """Creates a sequential block of dilated convolutional layers."""
-        layers = []
-
-        # Initial layer (if one_layer_before is True)
-        if one_layer_before:
-            layers += [
-                nn.Conv2d(inc, outc, kernel_size=1, bias=False),
-                nn.BatchNorm2d(outc),
-                nn.ReLU(inplace=True)
-            ]
-            inc = outc  # Ensure consistency for subsequent layers
-
-        # Stacked dilated convolutions
-        for dilation in dilations:
-            layers.append(nn.Sequential(
-                nn.Conv2d(inc, outc, kernel_size=1 if dilation == 1 else 3,
-                          padding=0 if dilation == 1 else dilation, dilation=dilation, bias=False),
-                nn.BatchNorm2d(outc),
-                nn.ReLU(inplace=True)
-            ))
-            inc = outc  # Maintain consistent channel size
-
-        return nn.Sequential(*layers)
+                nn.ReLU(True),
+                nn.Conv2d(outc, outc, 1))
 
     def forward(self, x):
-        """Processes multi-scale feature maps and merges them if required."""
-        outputs = []
+        outs = []
 
-        for i in reversed(range(self.num_scales)):
+        for i in range(self.num_scales - 1, -1, -1):
             if self.fpn and i < self.num_scales - 1:
-                fused_input = x[i] + F.interpolate(
-                    x[i + 1], size=x[i].shape[2:], mode='bilinear', align_corners=True)
+                tmp = self.layers[i](x[i] + F.interpolate(
+                    x[i + 1], x[i].shape[2:],
+                    mode='bilinear', align_corners=True))
             else:
-                fused_input = x[i]
+                tmp = self.layers[i](x[i])
 
-            processed_feat = self.layers[i](fused_input)
-
-            if self.target_shape:
-                processed_feat = F.interpolate(processed_feat, size=self.target_shape,
-                                               mode='bilinear', align_corners=True)
-            elif self.merge and i > 0:
-                processed_feat = F.interpolate(processed_feat, size=x[0].shape[2:],
-                                               mode='bilinear', align_corners=True)
-
-            outputs.append(processed_feat)
-
+            if self.target_shape is None:
+                if i > 0 and self.merge:
+                    tmp = F.interpolate(tmp, x[0].shape[2:],
+                        mode='bilinear', align_corners=True)
+            else:
+                tmp = F.interpolate(tmp, self.target_shape,
+                        mode='bilinear', align_corners=True)
+            outs.append(tmp)
         if self.merge:
-            merged_out = torch.sum(torch.stack(outputs, dim=-1), dim=-1)
-            return self.final_layer(merged_out)
-        
-        return outputs
+            out = torch.sum(torch.stack(outs, dim=-1), dim=-1)
+            out = self.final_layer(out)
+            
+            return out
+        else:
+            return outs
