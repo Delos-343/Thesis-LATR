@@ -75,11 +75,15 @@ class LATR(nn.Module):
             raise ValueError("Transformer or sparse_ins_decoder configuration missing in args.")
 
     def forward(self, image, _M_inv=None, is_training=True, extra_dict=None):
+
         if extra_dict is None:
             raise ValueError("extra_dict must be provided in forward pass.")
+        
+        extra_dict['image'] = image  # Add image to dictionary
 
         # Ensure encoder output is valid
         out_featList = self.encoder(image)
+        
         if self.neck:
             neck_out = self.neck(out_featList)
         else:
@@ -114,5 +118,4 @@ class LATR(nn.Module):
             ),
             is_training=is_training,
         )
-        
         return output
