@@ -55,7 +55,7 @@ Please follow the steps in [training](./docs/train_eval.md#train) to train the m
 | PersFormer-Res50 | 53.0 | 89.2 | 0.321 \| 0.303 | 0.085 \| 0.118 |
 
 ## Acknowledgment
-This library is inspired by [LATR](https://github.com/JMoonr/LATR), [OpenLane](https://github.com/OpenDriveLab/PersFormer_3DLane), [mmdetection3d](https://github.com/open-mmlab/mmdetection3d), [SparseInst](https://github.com/hustvl/SparseInst), and other related works. We thank them ever so kindly for sharing the codes, papers, and datasets for usage in this project.
+This library is inspired by [LATR](https://github.com/JMoonr/LATR), [OpenLane](https://github.com/OpenDriveLab/PersFormer_3DLane), [mmdetection3d](https://github.com/open-mmlab/mmdetection3d), [SparseInst](https://github.com/hustvl/SparseInst), and other related works. We thank them ever so kindly for sharing the codes, papers, and datasets to be used as references in this project.
 
 
 ## Citation
