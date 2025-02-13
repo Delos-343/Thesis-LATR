@@ -52,14 +52,12 @@ Please follow the steps in [training](./docs/train_eval.md#train) to train the m
 ### OpenLane
 | Models | F1 | Accuracy | X error <br> near \| far | Z-error <br> near \| far |
 | ----- | -- | -------- | ------- | ------- |
-| 3DLaneNet | 44.1 | - | 0.479 \| 0.572 | 0.367 \| 0.443 |
-| GenLaneNet | 32.3 | - | 0.593 \| 0.494 | 0.140 \| 0.195 |
-| Cond-IPM | 36.3 | - | 0.563 \| 1.080 | 0.421 \| 0.892 |
-| PersFormer | 50.5 | 89.5 | 0.319 \| 0.325 | 0.112 \| 0.141 |
-| CurveFormer | 50.5 | - | 0.340 \| 0.772 | 0.207 \| 0.651 |
-| PersFormer-Res50 | 53.0 | 89.2 | 0.321 \| 0.303 | 0.085 \| 0.118 |
 | **LATR** | 61.9 | 92.0 | 0.219 \| 0.259 | 0.075 \| 0.104 |
 | **Thesis-LATR** | 55.6 | 91.9 | 0.347 \| 0.446 | 0.529 \| 0.626 |
+| 3DLaneNet | 44.1 | - | 0.479 \| 0.572 | 0.367 \| 0.443 |
+| GenLaneNet | 32.3 | - | 0.593 \| 0.494 | 0.140 \| 0.195 |
+| PersFormer | 50.5 | 89.5 | 0.319 \| 0.325 | 0.112 \| 0.141 |
+| PersFormer-Res50 | 53.0 | 89.2 | 0.321 \| 0.303 | 0.085 \| 0.118 |
 
 ## Acknowledgment
 This library is inspired by [LATR](https://github.com/JMoonr/LATR), [OpenLane](https://github.com/OpenDriveLab/PersFormer_3DLane), [mmdetection3d](https://github.com/open-mmlab/mmdetection3d), [SparseInst](https://github.com/hustvl/SparseInst), and other related works. We thank them kindly for sharing the code and datasets.
