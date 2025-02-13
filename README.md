@@ -8,7 +8,7 @@
 <p align="center">
   <a href="http://repository.its.ac.id/id/eprint/117808" target='_blank'>
     <!-- <img src="https://img.shields.io/badge/arXiv-%F0%9F%93%83-yellow"> -->
-    <img src="https://img.shields.io/badge/arXiv-2308.04583-b31b1b.svg">
+    <img src="https://img.shields.io/badge/repository.its.ac.id-117808-b31b1b.svg">
   </a>
   <a href="" target='_blank'>
     <img src="https://visitor-badge.laobi.icu/badge?page_id=Delos-343.Thesis-LATR&left_color=gray&right_color=yellow">
