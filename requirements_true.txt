@@ -5,7 +5,8 @@
 
 # pytorch==1.8.0 torchvision==0.9.0 torchaudio==0.8.0 cudatoolkit=10.1 -c pytorch
 
-# packages in conda environment
+# All packages in conda environment
+
 # Packages from conda-forge
 _openmp_mutex==4.5  # conda-forge
 blas==2.125  # conda-forge
