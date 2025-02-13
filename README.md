@@ -10,7 +10,7 @@
 
 You can access the published paper in the [ITS Repository](http://repository.its.ac.id/id/eprint/117808).
 
-![fig2](/assets/fig2.png)
+![fig2](/assets/fig3.png)
 
 
 ## Environments
