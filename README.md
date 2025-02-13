@@ -1,7 +1,7 @@
 <br />
 <p>
   <h3 align="center">
-    <strong> A New Benchmark Model for Monocular 3D Lane Detection in Autonomous Driving using Transformative Architecture  ~  Thesis-LATR </strong>
+    <strong> A New Benchmark Model for Monocular 3D Lane Detection in Autonomous Driving using Transformative Architecture (Thesis-LATR | LATR.dp) </strong>
   </h3>
 </p>
 
