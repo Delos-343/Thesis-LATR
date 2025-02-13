@@ -62,7 +62,7 @@ This library is inspired by [LATR](https://github.com/JMoonr/LATR), [OpenLane](h
 If you find that this project is useful for your research, please consider citing the paper:
 
 ```tex
-@article{luo2023latr,
+@article{handoko2025thesis,
   title={A New Benchmark Model for Monocular 3D Lane Detection in Autonomous Driving using Transformative Architecture},
   author={Handoko, Mohammed Fachry Dwi and Tjandrasa, Handayani},
   journal={ITS Repository preprint uri:http://repository.its.ac.id/id/eprint/117808},
