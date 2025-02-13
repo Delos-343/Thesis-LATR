@@ -1,41 +1,25 @@
 <br />
-<p align="center">
-  
-  <h3 align="center"><strong>LATR: 3D Lane Detection from Monocular Images with Transformer</strong></h3>
-
-<p align="center">
-  <a href="https://arxiv.org/abs/2308.04583" target='_blank'>
-    <!-- <img src="https://img.shields.io/badge/arXiv-%F0%9F%93%83-yellow"> -->
-    <img src="https://img.shields.io/badge/arXiv-2308.04583-b31b1b.svg">
-  </a>
-  <a href="" target='_blank'>
-    <img src="https://visitor-badge.laobi.icu/badge?page_id=JMoonr.LATR&left_color=gray&right_color=yellow">
-  </a>
-    <a href="https://github.com/JMoonr/LATR" target='_blank'>
-     <img src="https://img.shields.io/github/stars/JMoonr/LATR?style=social">
-  </a>
-  
+<p align="center" style="display: flex; flex-direction: column; align-items: center;">
+  <h3 style="margin: 0;">
+    <strong> A New Benchmark Model for Monocular 3D Lane Detection in Autonomous Driving using Transformative Architecture </strong>
+  </h3>
+  <span style="font-size: 16px; font-weight: 300; margin-top: 0;"> by Mohammed Fachry Dwi Handoko &amp; Prof. Ir. Handayani Tjandrasa, M.Sc. Ph.D. </span>
 </p>
 
 
-This is the official PyTorch implementation of [LATR: 3D Lane Detection from Monocular Images with Transformer](https://arxiv.org/abs/2308.04583).
+This is the source code of [A New Benchmark Model for Monocular 3D Lane Detection in Autonomous Driving using Transformative Architecture](http://repository.its.ac.id/id/eprint/117808).
 
-![fig2](/assets/fig2.png)  
-
-## News
-  - **2024-01-15** :confetti_ball: Our new work [DV-3DLane: End-to-end Multi-modal 3D Lane Detection with Dual-view Representation](https://github.com/JMoonr/dv-3dlane) is accepted by ICLR2024.
-
-  - **2023-08-12** :tada: LATR is accepted as an Oral presentation at ICCV2023! :sparkles:
+![fig2](/assets/fig2.png)
 
 
 ## Environments
 To set up the required packages, please refer to the [installation guide](./docs/install.md).
 
 ## Data
-Please follow [data preparation](./docs/data_preparation.md) to download dataset.
+Please follow the [data preparation](./docs/data_preparation.md) manual to download the dataset.
 
 ## Pretrained Models
-Note that the performance of pretrained model is higher than our paper due to code refactoration and optimization. All models are uploaded to [google drive](https://drive.google.com/drive/folders/1AhvLvE84vayzFxa0teRHYRdXz34ulzjB?usp=sharing).
+Note that the performance of the pretrained model is higher than the actual due to code refactoration and optimization. All models are uploaded to [Google Drive](https://drive.google.com/drive/folders/1AhvLvE84vayzFxa0teRHYRdXz34ulzjB?usp=sharing).
 
 | Dataset | Pretrained | Metrics | md5 |
 | - | - | - | - |
@@ -51,12 +35,11 @@ Note that the performance of pretrained model is higher than our paper due to co
 You can download the [pretrained models](#pretrained-models) to `./pretrained_models` directory and refer to the [eval guide](./docs/train_eval.md#evaluation) for evaluation.
 
 ## Train
-Please follow the steps in [training](./docs/train_eval.md#train) to train the model.
+Please follow the steps in the [training](./docs/train_eval.md#train) manual to train the model.
 
 ## Benchmark
 
 ### OpenLane
-
 | Models | F1 | Accuracy | X error <br> near \| far | Z-error <br> near \| far |
 | ----- | -- | -------- | ------- | ------- |
 | 3DLaneNet | 44.1 | - | 0.479 \| 0.572 | 0.367 \| 0.443 |
@@ -65,106 +48,21 @@ Please follow the steps in [training](./docs/train_eval.md#train) to train the m
 | PersFormer | 50.5 | 89.5 | 0.319 \| 0.325 | 0.112 \| 0.141 |
 | CurveFormer | 50.5 | - | 0.340 \| 0.772 | 0.207 \| 0.651 |
 | PersFormer-Res50 | 53.0 | 89.2 | 0.321 \| 0.303 | 0.085 \| 0.118 |
-| **LATR-Lite** | 61.5 | 91.9 | 0.225 \| 0.249 | 0.073 \| 0.106 |
 | **LATR** | 61.9 | 92.0 | 0.219 \| 0.259 | 0.075 \| 0.104 |
-
-
-### Apollo
-
-Plaes kindly refer to our paper for the performance on other scenes.
-
-<table>
-    <tr>
-        <td>Scene</td>
-        <td>Models</td>
-        <td>F1</td>
-        <td>AP</td>
-        <td>X error <br> near | far </td>
-        <td>Z error <br> near | far </td>
-    </tr>
-    <tr>
-        <td rowspan="8">Balanced Scene</td>
-        <td>3DLaneNet</td>
-        <td>86.4</td>
-        <td>89.3</td>
-        <td>0.068 | 0.477</td>
-        <td>0.015 | 0.202</td>
-    </tr>
-    <tr>
-        <td>GenLaneNet</td>
-        <td>88.1</td>
-        <td>90.1</td>
-        <td>0.061 | 0.496</td>
-        <td>0.012 | 0.214</td>
-    </tr>
-    <tr>
-        <td>CLGo</td>
-        <td>91.9</td>
-        <td>94.2</td>
-        <td>0.061 | 0.361</td>
-        <td>0.029 | 0.250</td>
-    </tr>
-    <tr>
-        <td>PersFormer</td>
-        <td>92.9</td>
-        <td>-</td>
-        <td>0.054 | 0.356</td>
-        <td>0.010 | 0.234</td>
-    </tr>
-    <tr>
-        <td>GP</td>
-        <td>91.9</td>
-        <td>93.8</td>
-        <td>0.049 | 0.387</td>
-        <td>0.008 | 0.213</td>
-    </tr>
-    <tr>
-        <td>CurveFormer</td>
-        <td>95.8</td>
-        <td>97.3</td>
-        <td>0.078 | 0.326</td>
-        <td>0.018 | 0.219</td>
-    </tr>
-    <tr>
-        <td><b>LATR-Lite</b></td>
-        <td>96.5</td>
-        <td>97.8</td>
-        <td>0.035 | 0.283</td>
-        <td>0.012 | 0.209</td>
-    </tr>
-    <tr>
-        <td><b>LATR</b?</td>
-        <td>96.8</td>
-        <td>97.9</td>
-        <td>0.022 | 0.253</td>
-        <td>0.007 | 0.202</td>
-    </tr>
-</table>
-
-
-### ONCE
-
-| Method     | F1  | Precision(%) | Recall(%) | CD error(m) |
-| :- | :- | :- | :- | :- |   
-| 3DLaneNet  | 44.73 | 61.46 | 35.16 | 0.127 |
-| GenLaneNet | 45.59 | 63.95 | 35.42 | 0.121 |
-| SALAD <ONCE-3DLane> | 64.07 | 75.90 | 55.42 | 0.098 |
-| PersFormer | 72.07 | 77.82 | 67.11 | 0.086 |
-| **LATR** | 80.59 | 86.12 | 75.73 | 0.052 |
+| **Thesis-LATR** | 55.6 | 91.9 | 0.347 \| 0.446 | 0.529 \| 0.626 |
 
 ## Acknowledgment
-
-This library is inspired by [OpenLane](https://github.com/OpenDriveLab/PersFormer_3DLane), [GenLaneNet](https://github.com/yuliangguo/Pytorch_Generalized_3D_Lane_Detection), [mmdetection3d](https://github.com/open-mmlab/mmdetection3d), [SparseInst](https://github.com/hustvl/SparseInst), [ONCE](https://github.com/once-3dlanes/once_3dlanes_benchmark) and many other related works, we thank them for sharing the code and datasets.
+This library is inspired by [LATR](https://github.com/JMoonr/LATR), [OpenLane](https://github.com/OpenDriveLab/PersFormer_3DLane), [mmdetection3d](https://github.com/open-mmlab/mmdetection3d), [SparseInst](https://github.com/hustvl/SparseInst), and other related works. We thank them kindly for sharing the code and datasets.
 
 
 ## Citation
-If you find LATR is useful for your research, please consider citing the paper:
+If you find that this project is useful for your research, please consider citing the paper:
 
 ```tex
-@article{luo2023latr,
-  title={LATR: 3D Lane Detection from Monocular Images with Transformer},
-  author={Luo, Yueru and Zheng, Chaoda and Yan, Xu and Kun, Tang and Zheng, Chao and Cui, Shuguang and Li, Zhen},
-  journal={arXiv preprint arXiv:2308.04583},
-  year={2023}
+@article{handoko2025thesislatr,
+  title={A New Benchmark Model for Monocular 3D Lane Detection in Autonomous Driving using Transformative Architecture},
+  author={Handoko, Mohammed Fachry Dwi and Tjandrasa, Handayani},
+  journal={ITS Repository preprint uri:http://repository.its.ac.id/id/eprint/117808},
+  year={2025}
 }
 ```
