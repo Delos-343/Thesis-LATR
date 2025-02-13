@@ -19,7 +19,7 @@
 </p>
 
 
-You can access the publication [here](http://repository.its.ac.id/id/eprint/117808).
+You can access the published paper [here](http://repository.its.ac.id/id/eprint/117808).
 
 ![fig2](/assets/fig2.png)
 
