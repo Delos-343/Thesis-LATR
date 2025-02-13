@@ -2,7 +2,7 @@
 <p align="center">
   <h3 align="center">
     <strong> A New Benchmark Model for Monocular 3D Lane Detection in Autonomous Driving using Transformative Architecture </strong>
-    <small> by Mohammed Fachry Dwi Handoko &amp; Prof. Ir. Handayani Tjandrasa, M.Sc. Ph.D. </small>
+    <span style="font-size: 16px; font-weight: 300;"> by Mohammed Fachry Dwi Handoko &amp; Prof. Ir. Handayani Tjandrasa, M.Sc. Ph.D. </span>
   </h3>
 </p>
 
