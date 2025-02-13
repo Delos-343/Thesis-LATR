@@ -43,8 +43,8 @@ Please follow the steps in the [training](./docs/train_eval.md#train) manual to 
 ### OpenLane
 | Models | F1 | Accuracy | X error <br> near \| far | Z-error <br> near \| far |
 | ----- | -- | -------- | ------- | ------- |
-| **Thesis-LATR** | 55.6 | 91.9 | 0.347 \| 0.446 | 0.529 \| 0.626 |
-| **LATR** | 61.9 | 92.0 | 0.219 \| 0.259 | 0.075 \| 0.104 |
+| **Thesis-LATR** | **55.6** | **91.9** | **0.347** \| **0.446** | **0.529** \| **0.626** |
+| LATR | 61.9 | 92.0 | 0.219 \| 0.259 | 0.075 \| 0.104 |
 | 3DLaneNet | 44.1 | - | 0.479 \| 0.572 | 0.367 \| 0.443 |
 | GenLaneNet | 32.3 | - | 0.593 \| 0.494 | 0.140 \| 0.195 |
 | PersFormer | 50.5 | 89.5 | 0.319 \| 0.325 | 0.112 \| 0.141 |
