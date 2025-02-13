@@ -1,12 +1,12 @@
 <br />
-<p align="center">
-  <h3>
+<p>
+  <h3 align="center">
     <strong> A New Benchmark Model for Monocular 3D Lane Detection in Autonomous Driving using Transformative Architecture  ~  Thesis-Latr </strong>
   </h3>
 </p>
 
 
-This is the source code of [A New Benchmark Model for Monocular 3D Lane Detection in Autonomous Driving using Transformative Architecture](http://repository.its.ac.id/id/eprint/117808).
+You can access the published paper in the [ITS Repository](http://repository.its.ac.id/id/eprint/117808).
 
 ![fig2](/assets/fig2.png)
 
