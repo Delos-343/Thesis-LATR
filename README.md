@@ -17,7 +17,7 @@
 </p>
 
 
-This is the PyTorch implementation of [A New Benchmark Model for Monocular 3D Lane Detection in Autonomous Driving using Transformative Architecture](http://repository.its.ac.id/id/eprint/117808).
+This is the implementation of [A New Benchmark Model for Monocular 3D Lane Detection in Autonomous Driving using Transformative Architecture](http://repository.its.ac.id/id/eprint/117808).
 
 ![fig2](/assets/fig2.png)
 
