@@ -34,12 +34,7 @@ Note that the performance of pretrained model is higher than the actual due to c
 | Dataset | Pretrained | Metrics | md5 |
 | - | - | - | - |
 | OpenLane-1000 | [Google Drive](https://drive.google.com/file/d/1jThvqnJ2cUaAuKdlTuRKjhLCH0Zq62A1/view?usp=sharing) | F1=0.6297 | d8ecb900c34fd23a9e7af840aff00843 |
-| OpenLane-1000 (Lite version) | [Google Drive](https://drive.google.com/file/d/1WD5dxa6SI2oR9popw3kO2-7eGM2z-IHY/view?usp=sharing) | F1=0.6212 | 918de41d0d31dbfbecff3001c49dc296 |
-| ONCE | [Google Drive](https://drive.google.com/file/d/12kXkJ9tDxm13CyFbB1ddt82lJZkYEicd/view?usp=sharing) | F1=0.8125 | 65a6958c162e3c7be0960bceb3f54650 |
-| Apollo-balance | [Google Drive](https://drive.google.com/file/d/1hGyNrYi3wAQaKbC1mD_18NG35gdmMUiM/view?usp=sharing) | F1=0.9697 | 551967e8654a8a522bdb0756d74dd1a2 |
-| Apollo-rare | [Google Drive](https://drive.google.com/file/d/19VVBaWBnWiEqGx1zJaeXF_1CKn88G5v0/view?usp=sharing) | F1=0.9641 | 184cfff1d3097a9009011f79f4594138 |
-| Apollo-visual | [Google Drive](https://drive.google.com/file/d/1ZzaUODYK2dyiG_2bDXe5tiutxNvc71M2/view?usp=sharing) | F1=0.9611 | cec4aa567c264c84808f3c32f5aace82 |
-
+| OpenLane-1000 (Lite version) | [Google Drive](https://drive.google.com/file/d/1WD5dxa6SI2oR9popw3kO2-7eGM2z-IHY/view?usp=sharing) | F1=0.6212 | 918de41d0d31dbfbecff30
 
 ## Evaluation
 You can download the [pretrained models](#pretrained-models) to `./pretrained_models` directory and refer to the [eval guide](./docs/train_eval.md#evaluation) for evaluation.
@@ -52,8 +47,8 @@ Please follow the steps in [training](./docs/train_eval.md#train) to train the m
 ### OpenLane
 | Models | F1 | Accuracy | X error <br> near \| far | Z-error <br> near \| far |
 | ----- | -- | -------- | ------- | ------- |
-| **LATR** | 61.9 | 92.0 | 0.219 \| 0.259 | 0.075 \| 0.104 |
-| **Thesis-LATR** | 55.6 | 91.9 | 0.347 \| 0.446 | 0.529 \| 0.626 |
+| **Thesis-LATR** | **55.6** | **91.9** | **0.347** \| **0.446** | **0.529** \| **0.626** |
+| LATR | 61.9 | 92.0 | 0.219 \| 0.259 | 0.075 \| 0.104 |
 | 3DLaneNet | 44.1 | - | 0.479 \| 0.572 | 0.367 \| 0.443 |
 | GenLaneNet | 32.3 | - | 0.593 \| 0.494 | 0.140 \| 0.195 |
 | PersFormer | 50.5 | 89.5 | 0.319 \| 0.325 | 0.112 \| 0.141 |
