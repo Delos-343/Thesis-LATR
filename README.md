@@ -17,7 +17,7 @@
 </p>
 
 
-This is the implementation of [A New Benchmark Model for Monocular 3D Lane Detection in Autonomous Driving using Transformative Architecture](http://repository.its.ac.id/id/eprint/117808).
+You can access the publication [here](http://repository.its.ac.id/id/eprint/117808).
 
 ![fig2](/assets/fig2.png)
 
@@ -26,7 +26,7 @@ This is the implementation of [A New Benchmark Model for Monocular 3D Lane Detec
 To set up the required packages, please refer to the [installation guide](./docs/install.md).
 
 ## Data
-Please follow [data preparation](./docs/data_preparation.md) to download dataset.
+Please follow [data preparation](./docs/data_preparation.md) to download the dataset.
 
 ## Pretrained Models
 Note that the performance of pretrained model is higher than the actual due to code refactoration and optimization. All models are uploaded to [Google Drive](https://drive.google.com/drive/folders/1AhvLvE84vayzFxa0teRHYRdXz34ulzjB?usp=sharing).
