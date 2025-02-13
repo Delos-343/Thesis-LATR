@@ -29,7 +29,7 @@ To set up the required packages, please refer to the [installation guide](./docs
 Please follow [data preparation](./docs/data_preparation.md) to download the dataset.
 
 ## Pretrained Models
-Note that the performance of pretrained model is higher than the actual due to code refactoration and optimization. All models are uploaded to [Google Drive](https://drive.google.com/drive/folders/1AhvLvE84vayzFxa0teRHYRdXz34ulzjB?usp=sharing).
+Note that the performance of pretrained model is higher than the actual due to code refactoration and optimization. All models are uploaded to this specific [Google Drive](https://drive.google.com/drive/folders/1AhvLvE84vayzFxa0teRHYRdXz34ulzjB?usp=sharing).
 
 | Dataset | Pretrained | Metrics | md5 |
 | - | - | - | - |
