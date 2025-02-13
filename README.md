@@ -5,6 +5,8 @@
   </h3>
 </p>
 
+<br>
+
 
 You can access the published paper in the [ITS Repository](http://repository.its.ac.id/id/eprint/117808).
 
